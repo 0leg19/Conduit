@@ -1,0 +1,13 @@
+{
+    "identification": {
+        "name": "screen_name"
+    },
+    "security": {
+        "allowed_ips": ["*"],
+        "api_key": "YOUR_API_KEY"
+    },
+    "server": {
+        "host": "0.0.0.0",
+        "port": 8080
+    }
+}
