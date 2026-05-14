@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Alert</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            background: #060610;
+            font-family: 'Courier New', monospace;
+        }
+
+        #app {
+            width: 100vw; height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3vh;
+            padding: 4vw;
+            transition: background .6s ease;
+        }
+
+        #app.error   { background: #1a0505; }
+        #app.warning { background: #1a1200; }
+        #app.success { background: #051a09; }
+        #app.info    { background: #05101a; }
+
+        .icon {
+            font-size: clamp(48px, 14vw, 120px);
+            line-height: 1;
+        }
+
+        .text {
+            font-size: clamp(20px, 7vw, 64px);
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: .03em;
+            line-height: 1.2;
+            transition: color .6s ease;
+            word-break: break-word;
+        }
+
+        .text.error   { color: #ef4444; text-shadow: 0 0 32px rgba(239,68,68,.5); }
+        .text.warning { color: #f59e0b; text-shadow: 0 0 32px rgba(245,158,11,.5); }
+        .text.success { color: #22c55e; text-shadow: 0 0 32px rgba(34,197,94,.5); }
+        .text.info    { color: #38bdf8; text-shadow: 0 0 32px rgba(56,189,248,.5); }
+        .text.none    { color: #333; }
+
+        .dot {
+            position: fixed;
+            top: clamp(6px, 1.5vh, 14px);
+            left: clamp(6px, 1.5vw, 14px);
+            width: clamp(6px, 1.2vw, 10px);
+            height: clamp(6px, 1.2vw, 10px);
+            border-radius: 50%;
+            transition: background .4s, box-shadow .4s;
+        }
+        .dot.ok  { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+        .dot.err { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+    </style>
+</head>
+<body>
+<div id="app" :class="type">
+    <span class="dot" :class="connected ? 'ok' : 'err'"></span>
+    <div class="icon">{{ icon }}</div>
+    <div class="text" :class="type">{{ text }}</div>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
+const ICONS = { error: '⛔', warning: '⚠️', success: '✅', info: 'ℹ️' };
+
+createApp({
+    setup() {
+        const type      = ref('none');
+        const text      = ref('');
+        const connected = ref(false);
+
+        const icon = computed(() => ICONS[type.value] ?? '');
+
+        let timer = null;
+
+        function tick() { connected.value = bridge.connected; }
+
+        bridge.on('alert', m => {
+            type.value = m.type ?? 'info';
+            text.value = m.text ?? '';
+        });
+
+        onMounted(()   => { tick(); timer = setInterval(tick, 1000); });
+        onUnmounted(() => { clearInterval(timer); });
+
+        return { type, text, icon, connected };
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
