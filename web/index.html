@@ -1,1 +1,147 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Parking</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        html, body {
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            background: #060610;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+
+        #app {
+            width: 100vw; height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            padding: 2vh 3vw;
+        }
+
+        .bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .dot {
+            width: clamp(6px,1.4vw,12px); height: clamp(6px,1.4vw,12px);
+            border-radius: 50%;
+            transition: background .4s, box-shadow .4s;
+        }
+        .dot.ok  { background:#22c55e; box-shadow:0 0 8px #22c55e; }
+        .dot.err { background:#ef4444; box-shadow:0 0 8px #ef4444; }
+        .clock   { font-size:clamp(10px,2vw,18px); color:#333; letter-spacing:.06em; }
+
+        .plate-wrap {
+            position: relative;
+            background: #FCD303;
+            border: clamp(2px,.5vw,5px) solid #111;
+            border-radius: clamp(6px,1vw,12px);
+            padding: clamp(6px,1.5vh,16px) clamp(40px,8vw,80px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .plate-wrap .ge {
+            position: absolute; left: clamp(6px,1.2vw,14px); top:50%; transform:translateY(-50%);
+            font-size:clamp(9px,1.6vw,16px); font-weight:900; color:#1a3a8f; letter-spacing:0;
+        }
+        .plate-wrap .flag {
+            position: absolute; right:clamp(6px,1.2vw,14px); top:50%; transform:translateY(-50%);
+            font-size:clamp(12px,2.2vw,22px);
+        }
+        .plate-num {
+            font-size:clamp(28px,11vw,96px); font-weight:900; color:#111; letter-spacing:.1em;
+        }
+        .plate-num.empty { color:#aaa; }
+
+        .times { display:flex; align-items:center; gap:clamp(12px,5vw,60px); }
+        .time-block { text-align:center; }
+        .time-val {
+            font-size:clamp(22px,7vw,64px); font-weight:700; letter-spacing:.06em;
+        }
+        .time-val.entry { color:#4ade80; text-shadow:0 0 18px rgba(74,222,128,.45); }
+        .time-val.exit  { color:#f87171; text-shadow:0 0 18px rgba(248,113,113,.45); }
+        .time-icon { font-size:clamp(10px,2vw,18px); color:#444; margin-top:.4vh; }
+        .divider { width:1px; height:clamp(24px,6vh,56px); background:#222; }
+
+        .amount {
+            font-size:clamp(26px,9vw,80px); font-weight:900; letter-spacing:.04em;
+            color:#34d399; text-shadow:0 0 28px rgba(52,211,153,.55);
+        }
+        .amount.empty { color:#1f2937; }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <div class="bar">
+        <span class="dot" :class="connected ? 'ok' : 'err'"></span>
+        <span class="clock">{{ clock }}</span>
+    </div>
+
+    <div class="plate-wrap">
+        <span class="ge">GE</span>
+        <span class="plate-num" :class="{ empty: !plate }">{{ plate || '— — —' }}</span>
+        <span class="flag">🇬🇪</span>
+    </div>
+
+    <div class="times">
+        <div class="time-block">
+            <div class="time-val entry">{{ entryTime || '--:--' }}</div>
+            <div class="time-icon">↘</div>
+        </div>
+        <div class="divider"></div>
+        <div class="time-block">
+            <div class="time-val exit">{{ exitTime || '--:--' }}</div>
+            <div class="time-icon">↗</div>
+        </div>
+    </div>
+
+    <div class="amount" :class="{ empty: !amount }">{{ amount || '— ₾' }}</div>
+
+</div>
+
+<script>
+const { createApp, ref, onMounted, onUnmounted } = Vue;
+
+createApp({
+    setup() {
+        const plate      = ref('');
+        const entryTime  = ref('');
+        const exitTime   = ref('');
+        const amount     = ref('');
+        const connected  = ref(false);
+        const clock      = ref('');
+
+        let timer = null;
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+        function tick() {
+            const d = new Date();
+            clock.value     = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            connected.value = bridge.connected;
+        }
+
+        bridge.on('parking', m => {
+            plate.value     = m.plate      ?? '';
+            entryTime.value = m.entry_time ?? '';
+            exitTime.value  = m.exit_time  ?? '';
+            amount.value    = m.amount     ?? '';
+        });
+
+        onMounted(()   => { tick(); timer = setInterval(tick, 1000); });
+        onUnmounted(() => { clearInterval(timer); });
+
+        return { plate, entryTime, exitTime, amount, connected, clock };
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
