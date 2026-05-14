@@ -1,0 +1,19 @@
+{
+  post {
+    "url": "http://localhost:8080/parking"
+  },
+  headers {
+    "Authorization": "123456"
+  },
+  body {
+    {
+      "event": "parking",
+      "message": {
+        "plate":      "AA-123-GE",
+        "entry_time": "14:30",
+        "exit_time":  "16:15",
+        "amount":     "6.25 ₾"
+      }
+    }
+  }
+}
