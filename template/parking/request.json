@@ -1,11 +1,11 @@
 {
-  post {
+  "post" {
     "url": "http://localhost:8080/parking"
   },
-  headers {
+  "headers" {
     "Authorization": "123456"
   },
-  body {
+  "body" {
     {
       "event": "parking",
       "message": {
